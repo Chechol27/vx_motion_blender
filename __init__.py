@@ -12,7 +12,9 @@ bl_info = {
 import sys
 import importlib
 
+
 load_order = [
+    'pixel_collection',
     'mesh_evaluators',
     'mesh_evaluators.mesh_evaluator',
     'mesh_evaluators.constant_topology_evaluator',
