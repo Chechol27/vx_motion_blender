@@ -15,14 +15,17 @@ import importlib
 
 load_order = [
     'pixel_collection',
+    'vat_properties',
     'mesh_evaluators',
     'mesh_evaluators.mesh_evaluator',
     'mesh_evaluators.constant_topology_evaluator',
     'mesh_evaluators.variable_topology_evaluator',
     'mesh_evaluators.smoke_simulation_evaluator',
     'mesh_evaluators.particle_system_evaluator',
-    'operators'
-    '.bake_vat',
+    'operators',
+    'operators.bake_vat',
+    'operators.export_vat',
+    'ui'
 ]
 
 
@@ -54,21 +57,41 @@ def load_modules() -> list[str]:
         importlib.import_module(name)
     return names
 
+
+def check_and_reload():
+    names = [__name__ + "." + name for name in load_order]
+    for name in names:
+        if name in locals():
+            importlib.reload(sys.modules[name])
+        else:
+            importlib.import_module(name)
+
+
 print("\n\n\n\n\n")
 
-if "bpy" in locals():
-    reload_modules()
-else:
-    load_modules()
+# if "bpy" in locals():
+#     reload_modules()
+# else:
+#     load_modules()
+
+check_and_reload()
 
 
 import bpy
-from .operators import bake_vat
+from .operators import bake_vat, export_vat
+from . import vat_properties
+from . import ui
 
 
 def register():
+    vat_properties.register()
     bake_vat.register()
+    export_vat.register()
+    ui.register()
 
 
 def unregister():
+    ui.unregister()
+    export_vat.unregister()
     bake_vat.unregister()
+    vat_properties.unregister()
