@@ -41,25 +41,3 @@ class ConstantTopologyEvaluator(MeshEvaluator):
         context.collection.objects.link(obj)
         self.base_object = obj
         return obj
-
-    def create_uv_maps(self, ev_mesh: bpy.types.Mesh):
-        """
-        Creates an uv map every 1024 vertices without separating polygons, these go from left to right and start at Y=0
-        :param ev_mesh: evaluated mesh for modification
-        """
-        uv_map_count = -1
-        loop_counter = 0
-        layer_name = ""
-        for v_id, vertex in enumerate(ev_mesh.vertices):
-            if loop_counter >= 1024 or uv_map_count < 0:
-                x_limit = min(1024, len(ev_mesh.vertices) - v_id)
-                loop_counter = 0
-                uv_map_count += 1
-                layer_name = f"VAT_{uv_map_count}"
-                try:
-                    ev_mesh.uv_layers.remove(ev_mesh.uv_layers[layer_name])
-                except Exception as e:
-                    print(f"Creating new uv layer ({layer_name})")
-                self.uv_layers.append((x_limit, ev_mesh.uv_layers.new(name=layer_name, do_init=False)))
-            ev_mesh.uv_layers[layer_name].data[v_id].uv = Vector((loop_counter/x_limit, 0))
-            loop_counter += 1
