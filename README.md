@@ -31,7 +31,9 @@ pixels, given that the RGB channels can be encoded to XYZ coordinates, the trans
 Once The data is stored in the necessary textures, a vertex shader can decode and apply this information as vertex offsets
 for each vertex in a base mesh, making the runtime cost of such complex animations just a very small fraction of what it
 would take to simulate something like a water splash or a Smoke puff.
+
 ---
+
 ## Usage Guide
 
 ## Baking VATs
@@ -90,7 +92,9 @@ Please visit the plugin pages for the supported engines:
 
 Alternatively, you can import your VATs into your preferred software simply by extracting the `.vatclip` as a zip file and
 following the software's asset import pipeline with the individual files
+
 ---
+
 ## Development Guide
 
 If you want to modify this addon, feel free to do so here's a quick start guide for a simpler development process
