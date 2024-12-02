@@ -24,7 +24,7 @@ class VariableTopologyEvaluator(MeshEvaluator):
         b_mesh.free()
         return out_mesh
 
-    def create_base_object(self, context: bpy.types.Context):
+    def create_base_object(self, context: bpy.types.Context) -> bpy.types.Object:
         max_triangle_count = 0
         for ev_mesh in self.evaluated_meshes:
             triangle_count = len(ev_mesh.polygons)

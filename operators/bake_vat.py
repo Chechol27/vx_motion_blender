@@ -1,8 +1,11 @@
 import bpy.types
-import numpy
+import logging
 from ..pixel_collection import PixelCollection
 from ..mesh_evaluators import mesh_evaluator_factory
 from ..mesh_evaluators.mesh_evaluator import MeshEvaluator
+
+logger = logging.getLogger(__name__+"."+__file__)
+
 
 class BakeVat(bpy.types.Operator):
     bl_idname = "object.bake_vertex_animation_texture"
@@ -10,7 +13,6 @@ class BakeVat(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-
         bake_positions = context.scene.vat_baking_properties.bake_positions
         bake_normals = context.scene.vat_baking_properties.bake_normals
         bake_tangents = context.scene.vat_baking_properties.bake_tangents
@@ -40,8 +42,9 @@ class BakeVat(bpy.types.Operator):
                 image = bpy.data.images.new(f"{mesh_evaluator.base_object.name}_{name_data[i]}_VAT_{map_id}",
                                             width=image_data.shape[0], height=image_data.shape[1], float_buffer=True,
                                             alpha=False)
+                logger.info(f"Image Name: {image.name}")
                 image.pixels = image_data.pixel_data
-                image.filepath_raw = f"C:/tmp/vat_cache/{image.name}.exr"
+                image.filepath_raw = f"/tmp/vat_cache/{image.name}.exr"
                 match i:
                     case 0:
                         context.scene.vat_export_properties.position_texture_path = image.filepath_raw
@@ -51,41 +54,6 @@ class BakeVat(bpy.types.Operator):
                         context.scene.vat_export_properties.tangent_texture_path = image.filepath_raw
                 image.file_format = 'OPEN_EXR'
                 image.save()
-
-
-        # counter = 0
-        # if context.scene.vat_baking_properties.bake_positions:
-        #     counter += 1
-        #     position_data = mesh_evaluator.evaluate_position_data()
-        #     for map_id, image_data in enumerate(position_data):
-        #         image = bpy.data.images.new(f"{mesh_evaluator.base_object.name}_POSITION_VAT_{map_id}", width=image_data.shape[0], height=image_data.shape[1], float_buffer=True, alpha=False)
-        #         image.pixels = image_data.pixel_data
-        #         image.filepath_raw = f"C:/tmp/{image.name}.exr"
-        #         context.scene.vat_export_properties.position_texture_path = image.filepath_raw
-        #         image.file_format = 'OPEN_EXR'
-        #         image.save()
-        #
-        # if context.scene.vat_baking_properties.bake_normals:
-        #     counter += 1
-        #     normal_data = mesh_evaluator.evaluate_normal_data()
-        #     for map_id, image_data in enumerate(normal_data):
-        #         image = bpy.data.images.new(f"{mesh_evaluator.base_object.name}_NORMAL_VAT_{map_id}", width=image_data.shape[0], height=image_data.shape[1], float_buffer=True, alpha=False)
-        #         image.pixels = image_data.pixel_data
-        #         image.filepath_raw = f"C:/tmp/{image.name}.exr"
-        #         context.scene.vat_export_properties.normal_texture_path = image.filepath_raw
-        #         image.file_format = 'OPEN_EXR'
-        #         image.save()
-        #
-        # if context.scene.vat_baking_properties.bake_tangents:
-        #     counter += 1
-        #     tangent_data = mesh_evaluator.evaluate_tangent_data()
-        #     for map_id, image_data in enumerate(tangent_data):
-        #         image = bpy.data.images.new(f"{mesh_evaluator.base_object.name}_TANGENT_VAT_{map_id}", width=image_data.shape[0], height=image_data.shape[1], float_buffer=True, alpha=False)
-        #         image.pixels = image_data.pixel_data
-        #         image.filepath_raw = f"C:/tmp/{image.name}.exr"
-        #         context.scene.vat_export_properties.tangent_texture_path = image.filepath_raw
-        #         image.file_format = 'OPEN_EXR'
-        #         image.save()
 
         if any([bake_positions, bake_normals, bake_tangents]):
             context.scene.vat_export_properties.vat_mesh = mesh_evaluator.base_object.name

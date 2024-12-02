@@ -22,7 +22,7 @@ class MeshEvaluator(abc.ABC):
             context.scene.frame_set(i)
             eval_obj = self.evaluate_object(context, self.object_to_evaluate)
             self.evaluated_meshes.append(self.evaluate_mesh(eval_obj))
-        self.create_base_object(context)
+        self.base_object = self.create_base_object(context)
 
     def evaluate_object(self, context: bpy.types.Context, object_to_evaluate: bpy.types.Object):
         deps_graph = context.evaluated_depsgraph_get()
@@ -105,6 +105,6 @@ class MeshEvaluator(abc.ABC):
             loop_counter += 1
 
     @abc.abstractmethod
-    def create_base_object(self, context: bpy.types.Context):
+    def create_base_object(self, context: bpy.types.Context) -> bpy.types.Object:
         pass
 
