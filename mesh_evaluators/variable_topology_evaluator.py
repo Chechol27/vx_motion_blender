@@ -42,8 +42,9 @@ class VariableTopologyEvaluator(MeshEvaluator):
 
             b_mesh.faces.new([v1, v2, v3])
         out_mesh = bpy.data.meshes.new(f"{self.object_to_evaluate.name}_VAT")
-        self.create_uv_maps(out_mesh)
         b_mesh.to_mesh(out_mesh)
+
         obj = bpy.data.objects.new(out_mesh.name, out_mesh)
+        self.create_uv_maps(obj.data)
         context.collection.objects.link(obj)
         return obj

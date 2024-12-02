@@ -1,9 +1,11 @@
 import abc
 import bpy
+import logging
 from mathutils import Vector
 
 from ..pixel_collection import PixelCollection
 
+logger = logging.getLogger(__name__+"."+__file__)
 
 class MeshEvaluator(abc.ABC):
 
@@ -33,14 +35,19 @@ class MeshEvaluator(abc.ABC):
 
     def evaluate_position_data(self) -> list[PixelCollection]:
         pos_data_collection: list[PixelCollection] = []
+        logger.info(f"Evaluating position data ({len(self.evaluated_meshes)} evaluated meshes) for object \"{self.base_object.name}\", expected position data count: {len(self.base_object.data.vertices) * len(self.uv_layers) * 4}")
         for ev_mesh in self.evaluated_meshes:
             vertex_offset = 0
             for layer_id, (tex_coord_count, layer_info) in enumerate(self.uv_layers):
                 if len(pos_data_collection) < layer_id + 1:
                     pos_data_collection.append(PixelCollection((tex_coord_count, len(self.evaluated_meshes), 4)))
                 pos_data = pos_data_collection[layer_id]
+                vertex_id = 0
                 for vertex_id, vertex in enumerate(ev_mesh.vertices[vertex_offset:vertex_offset + tex_coord_count]):
                     pos_data.append_pixel((vertex.co.x, vertex.co.y, vertex.co.z, 1))
+                if vertex_id < tex_coord_count:
+                    for i in range(tex_coord_count - vertex_id):
+                        pos_data.append_pixel((0, 0, 0, 0))
                 vertex_offset += tex_coord_count
         return pos_data_collection
 
@@ -84,15 +91,16 @@ class MeshEvaluator(abc.ABC):
 
     def create_uv_maps(self, ev_mesh: bpy.types.Mesh):
         """
-        Creates an uv map every 1024 vertices without separating polygons, these go from left to right and start at Y=0
+        Creates an uv map every 4096 vertices without separating polygons, these go from left to right and start at Y=0
         :param ev_mesh: evaluated mesh for modification
         """
         uv_map_count = -1
         loop_counter = 0
         layer_name = ""
+        logger.info(f"Creating uv maps for base mesh ({len(ev_mesh.vertices)} vertices)")
         for v_id, vertex in enumerate(ev_mesh.vertices):
-            if loop_counter >= 1024 or uv_map_count < 0:
-                x_limit = min(1024, len(ev_mesh.vertices) - v_id)
+            if loop_counter >= 4096 or uv_map_count < 0:
+                x_limit = min(4096, len(ev_mesh.vertices) - v_id)
                 loop_counter = 0
                 uv_map_count += 1
                 layer_name = f"VAT_{uv_map_count}"
@@ -100,7 +108,7 @@ class MeshEvaluator(abc.ABC):
                     ev_mesh.uv_layers.remove(ev_mesh.uv_layers[layer_name])
                 except Exception as e:
                     print(f"Creating new uv layer ({layer_name})")
-                self.uv_layers.append((x_limit, ev_mesh.uv_layers.new(name=layer_name, do_init=False)))
+                    self.uv_layers.append((x_limit, ev_mesh.uv_layers.new(name=layer_name, do_init=False)))
             ev_mesh.uv_layers[layer_name].data[v_id].uv = Vector((loop_counter/x_limit, 0))
             loop_counter += 1
 
