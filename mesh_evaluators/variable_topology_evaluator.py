@@ -1,8 +1,14 @@
+import logging
+import math
+
 import bpy
 import bmesh
 from mathutils import Vector
+
+from ..pixel_collection import PixelCollection
 from .mesh_evaluator import MeshEvaluator
 
+logger = logging.getLogger(__name__+"."+__file__)
 
 class VariableTopologyEvaluator(MeshEvaluator):
     """
@@ -48,3 +54,36 @@ class VariableTopologyEvaluator(MeshEvaluator):
         self.create_uv_maps(obj.data)
         context.collection.objects.link(obj)
         return obj
+
+    def evaluate_position_data(self) -> list[PixelCollection]:
+        ret = []
+        for tex_coord_count, layer in self.uv_layers:
+            polygon_offset = 0
+            shape = (tex_coord_count, len(self.evaluated_meshes), 4)
+            pixel_data = PixelCollection(shape)
+            polygon_count = 0
+            vertex_count = 0
+            for mesh in self.evaluated_meshes:
+                polygon_count = max(polygon_count, len(mesh.polygons))
+                for polygon in mesh.polygons[polygon_offset:]:
+                    if vertex_count + len(polygon.vertices) > tex_coord_count:
+                        vertex_count = 0
+                        break
+                    for vertex in polygon.vertices:
+                        v = mesh.vertices[vertex]
+                        pixel_data.append_pixel((v.co.x, v.co.y, v.co.z, 1))
+                        vertex_count += 1
+
+                if vertex_count < tex_coord_count:
+                    for i in range(tex_coord_count-vertex_count):
+                        pixel_data.append_pixel((0, 0, 0, 1))
+
+            polygon_offset += polygon_count
+            ret.append(pixel_data)
+        return ret
+
+    def evaluate_normal_data(self) -> list[PixelCollection]:
+        pass
+
+    def evaluate_tangent_data(self) -> list[PixelCollection]:
+        pass

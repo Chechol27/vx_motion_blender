@@ -10,3 +10,6 @@ class PixelCollection:
 
     def append_pixel(self, pixel: tuple):
         self.pixel_data.extend(pixel)
+
+    def pixel_data_length(self):
+        return len(self.pixel_data)

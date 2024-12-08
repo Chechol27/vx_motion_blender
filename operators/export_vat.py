@@ -3,7 +3,7 @@ import os
 from zipfile import ZipFile
 
 class ExportVat(bpy.types.Operator):
-    bl_idname = "object.export_vertex_animattion_textures"
+    bl_idname = "object.export_vertex_animation_textures"
     bl_label = "Export Vertex Animation Textures"
     bl_options = {'UNDO'}
 

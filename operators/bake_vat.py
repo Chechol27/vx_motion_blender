@@ -52,7 +52,7 @@ class BakeVat(bpy.types.Operator):
                 continue
             logger.info(f"Baking VATs for {mesh_evaluator.base_object.name}")
             geometry_data = evaluation_functions[i]()
-            logger.info(f"Evaluation function: {evaluation_functions[i]} Geometry Data: {geometry_data}")
+            logger.info(f"Evaluation function: {evaluation_functions[i]} Geometry Data ({[(px.pixel_data_length(), px.shape) for px in geometry_data]}): {len(geometry_data)}")
             for map_id, image_data in enumerate(geometry_data):
                 image = bpy.data.images.new(f"{mesh_evaluator.base_object.name}_{name_data[i]}_VAT_{map_id}",
                                             width=image_data.shape[0], height=image_data.shape[1], float_buffer=True,
