@@ -1,10 +1,15 @@
 import bpy.types
+import logging
 from typing import cast
 from .mesh_evaluator import MeshEvaluator
 from .constant_topology_evaluator import ConstantTopologyEvaluator
 from .variable_topology_evaluator import VariableTopologyEvaluator
 from .particle_system_evaluator import ParticleSystemEvaluator
 from .smoke_simulation_evaluator import SmokeSimulationEvaluator
+
+
+logger = logging.getLogger(__name__+"."+__file__)
+
 
 def evaluate_variable_topology(object_to_evaluate: bpy.types.Object) -> bool:
     variable_topology_modifiers = ['NODES', 'PARTICLE_SYSTEM', 'FLUID', 'VOLUME_TO_MESH']
@@ -16,10 +21,10 @@ def evaluate_variable_topology(object_to_evaluate: bpy.types.Object) -> bool:
 
 def get_fluid_simulation_evaluator(context: bpy.types.Context, object_to_evaluate: bpy.types.Object, frame_range: (int, int)) -> MeshEvaluator:
     fluid_modifier = cast(bpy.types.FluidModifier, [mod for mod in object_to_evaluate.modifiers if mod.type == "FLUID"][0])
-    if fluid_modifier.fluid_type != "FLOW":
+    if fluid_modifier.fluid_type != "DOMAIN":
         print("!!!VATs fluid simulation object must be flow")
-    flow_type = fluid_modifier.flow_settings.flow_type
-    if flow_type in ["SMOKE", "BOTH", "FIRE"]:
+    domain_type = fluid_modifier.domain_settings.domain_type
+    if domain_type in ["SMOKE", "BOTH", "FIRE"]:
         return SmokeSimulationEvaluator(context, object_to_evaluate, frame_range)
     else:
         return VariableTopologyEvaluator(context, object_to_evaluate, frame_range)
@@ -43,9 +48,9 @@ def get_variable_topology_evaluator(context: bpy.types.Context, object_to_evalua
 def get_mesh_evaluator(context: bpy.types.Context, object_to_evaluate: bpy.types.Object, frame_range: (int, int)) -> MeshEvaluator:
     # for smoke simulations and particle systems
     if evaluate_variable_topology(object_to_evaluate):
-        print(f"{object_to_evaluate.name} has variable topology")
+        logger.info(f"{object_to_evaluate.name} has variable topology")
         return get_variable_topology_evaluator(context, object_to_evaluate, frame_range)
     else:
-        print(f"{object_to_evaluate.name} has constant topology")
+        logger.info(f"{object_to_evaluate.name} has constant topology")
         return ConstantTopologyEvaluator(context, object_to_evaluate, frame_range)
     pass

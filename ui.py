@@ -46,7 +46,7 @@ class ExportVatOptionsMenu(Panel, VXMotionPanel):
         scene = context.scene
         layout = self.layout
         layout.prop(scene.vat_export_properties, "export_path", text="Exoport path")
-        layout.operator("object.export_vertex_animattion_textures", text="Export VATs")
+        layout.operator("object.export_vertex_animation_textures", text="Export VATs")
 
 
 def register():
