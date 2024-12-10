@@ -4,14 +4,14 @@ import logging
 from mathutils import Vector
 
 from ..pixel_collection import PixelCollection
-from .vertex_stream import VertexStream
+from .vertex_identifiers import VertexIdentifier
 logger = logging.getLogger(__name__+"."+__file__)
 
 
 class MeshEvaluator(abc.ABC):
 
-    evaluated_meshes: list[bpy.types.Mesh] = []
-    object_to_evaluate: bpy.types.Object = None
+    evaluated_meshes: list[bpy.types.Mesh]
+    object_to_evaluate: bpy.types.Object
     uv_layers: list[tuple[int, bpy.types.MeshUVLoopLayer]]
     base_object: bpy.types.Object
     frame_range: tuple[int, int]
@@ -33,6 +33,10 @@ class MeshEvaluator(abc.ABC):
 
     def evaluate_mesh(self, evaluated_object: bpy.types.Object) -> bpy.types.Mesh:
         return bpy.data.meshes.new_from_object(evaluated_object)
+
+    @abc.abstractmethod
+    def evaluate_vertex_data(self, vertex_identifier: VertexIdentifier) -> list[PixelCollection]:
+        pass
 
     @abc.abstractmethod
     def create_base_object(self, context: bpy.types.Context) -> bpy.types.Object:

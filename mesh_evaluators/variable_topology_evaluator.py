@@ -6,6 +6,7 @@ import bpy
 import bmesh
 from mathutils import Vector
 
+from .vertex_identifiers import VertexIdentifier
 from ..pixel_collection import PixelCollection
 from .mesh_evaluator import MeshEvaluator
 
@@ -57,7 +58,7 @@ class VariableTopologyEvaluator(MeshEvaluator):
         context.collection.objects.link(obj)
         return obj
 
-    def evaluate_position_data(self) -> list[PixelCollection]:
+    def evaluate_vertex_data(self, vertex_identifier: VertexIdentifier) -> list[PixelCollection]:
         ret = []
         layer_vertex_offset = 0
         flattened_evaluated_meshes = []
@@ -66,7 +67,11 @@ class VariableTopologyEvaluator(MeshEvaluator):
             vertex_list = []
             polygons = frame_mesh.polygons
             for polygon in polygons:
-                vertex_list.extend(frame_mesh.vertices[v_id] for v_id in polygon.vertices)
+                match vertex_identifier:
+                    case VertexIdentifier.POSITION:
+                        vertex_list.extend(frame_mesh.vertices[v_id].co for v_id in polygon.vertices)
+                    case VertexIdentifier.NORMAL:
+                        vertex_list.extend(frame_mesh.vertex_normals[v_id] for v_id in polygon.vertices)
             flattened_evaluated_meshes.append(vertex_list)
         # Iterate through number of textures (z)
         for tex_coord_count, layer in self.uv_layers:
@@ -79,7 +84,7 @@ class VariableTopologyEvaluator(MeshEvaluator):
                 for vertex in frame_mesh[layer_vertex_offset:]:
                     if frame_vertex_count >= tex_coord_count:
                         break
-                    pixel_data.append_pixel((vertex.co.x, vertex.co.y, vertex.co.z, 1))
+                    pixel_data.append_pixel((vertex.x, vertex.y, vertex.z, 1))
                     frame_vertex_count += 1
                 if frame_vertex_count < tex_coord_count:
                     for i in range(tex_coord_count - frame_vertex_count):
@@ -88,8 +93,11 @@ class VariableTopologyEvaluator(MeshEvaluator):
             layer_vertex_offset += tex_coord_count
         return ret
 
+    def evaluate_position_data(self) -> list[PixelCollection]:
+        return self.evaluate_vertex_data(VertexIdentifier.POSITION)
+
     def evaluate_normal_data(self) -> list[PixelCollection]:
-        pass
+        return self.evaluate_vertex_data(VertexIdentifier.NORMAL)
 
     def evaluate_tangent_data(self) -> list[PixelCollection]:
         pass
