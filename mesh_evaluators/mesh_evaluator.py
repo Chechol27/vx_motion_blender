@@ -5,7 +5,6 @@ from mathutils import Vector
 
 from ..pixel_collection import PixelCollection
 from .vertex_stream import VertexStream
-
 logger = logging.getLogger(__name__+"."+__file__)
 
 
