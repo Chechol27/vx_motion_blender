@@ -8,6 +8,7 @@ from .vertex_stream import VertexStream
 
 logger = logging.getLogger(__name__+"."+__file__)
 
+
 class MeshEvaluator(abc.ABC):
 
     evaluated_meshes: list[bpy.types.Mesh] = []
@@ -35,6 +36,10 @@ class MeshEvaluator(abc.ABC):
         return bpy.data.meshes.new_from_object(evaluated_object)
 
     @abc.abstractmethod
+    def create_base_object(self, context: bpy.types.Context) -> bpy.types.Object:
+        pass
+
+    @abc.abstractmethod
     def evaluate_position_data(self) -> list[PixelCollection]:
         pass
 
@@ -48,7 +53,9 @@ class MeshEvaluator(abc.ABC):
 
     def create_uv_maps(self, ev_mesh: bpy.types.Mesh):
         """
-        Creates an uv map every 4096 vertices without separating polygons, these go from left to right and start at Y=0
+        Creates an uv map every 4096 vertices, these go from left to right and start at Y=0
+        maximum 4 uv maps including the ones already in the mesh for more than 16384 vertices, the system will use
+        multiple meshes and textures
         :param ev_mesh: evaluated mesh for modification
         """
         uv_map_count = -1
@@ -68,8 +75,3 @@ class MeshEvaluator(abc.ABC):
                     self.uv_layers.append((x_limit, ev_mesh.uv_layers.new(name=layer_name, do_init=False)))
             ev_mesh.uv_layers[layer_name].data[v_id].uv = Vector((loop_counter/x_limit, 0))
             loop_counter += 1
-
-    @abc.abstractmethod
-    def create_base_object(self, context: bpy.types.Context) -> bpy.types.Object:
-        pass
-

@@ -1,5 +1,6 @@
 import logging
 import math
+import sys
 
 import bpy
 import bmesh
@@ -10,9 +11,10 @@ from .mesh_evaluator import MeshEvaluator
 
 logger = logging.getLogger(__name__+"."+__file__)
 
+
 class VariableTopologyEvaluator(MeshEvaluator):
     """
-    Evaluated mesh collection with an intermediary face triangle database that stems from an object
+    Evaluated mesh collection with an intermediary face triangle database created based on an object
     which animation variates its topology, useful for fluid simulations, animated generative modifiers
     and geometry nodes
     """
@@ -57,29 +59,33 @@ class VariableTopologyEvaluator(MeshEvaluator):
 
     def evaluate_position_data(self) -> list[PixelCollection]:
         ret = []
+        layer_vertex_offset = 0
+        flattened_evaluated_meshes = []
+        # flatten meshes
+        for frame_mesh in self.evaluated_meshes:
+            vertex_list = []
+            polygons = frame_mesh.polygons
+            for polygon in polygons:
+                vertex_list.extend(frame_mesh.vertices[v_id] for v_id in polygon.vertices)
+            flattened_evaluated_meshes.append(vertex_list)
+        # Iterate through number of textures (z)
         for tex_coord_count, layer in self.uv_layers:
-            polygon_offset = 0
             shape = (tex_coord_count, len(self.evaluated_meshes), 4)
             pixel_data = PixelCollection(shape)
-            polygon_count = 0
-            vertex_count = 0
-            for mesh in self.evaluated_meshes:
-                polygon_count = max(polygon_count, len(mesh.polygons))
-                for polygon in mesh.polygons[polygon_offset:]:
-                    if vertex_count + len(polygon.vertices) > tex_coord_count:
-                        vertex_count = 0
+            # Iterate through frames (y)
+            for frame_mesh in flattened_evaluated_meshes:
+                # Iterate through vertices by triangle (x)
+                frame_vertex_count = 0
+                for vertex in frame_mesh[layer_vertex_offset:]:
+                    if frame_vertex_count >= tex_coord_count:
                         break
-                    for vertex in polygon.vertices:
-                        v = mesh.vertices[vertex]
-                        pixel_data.append_pixel((v.co.x, v.co.y, v.co.z, 1))
-                        vertex_count += 1
-
-                if vertex_count < tex_coord_count:
-                    for i in range(tex_coord_count-vertex_count):
+                    pixel_data.append_pixel((vertex.co.x, vertex.co.y, vertex.co.z, 1))
+                    frame_vertex_count += 1
+                if frame_vertex_count < tex_coord_count:
+                    for i in range(tex_coord_count - frame_vertex_count):
                         pixel_data.append_pixel((0, 0, 0, 1))
-
-            polygon_offset += polygon_count
             ret.append(pixel_data)
+            layer_vertex_offset += tex_coord_count
         return ret
 
     def evaluate_normal_data(self) -> list[PixelCollection]:

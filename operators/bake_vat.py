@@ -56,7 +56,7 @@ class BakeVat(bpy.types.Operator):
             for map_id, image_data in enumerate(geometry_data):
                 image = bpy.data.images.new(f"{mesh_evaluator.base_object.name}_{name_data[i]}_VAT_{map_id}",
                                             width=image_data.shape[0], height=image_data.shape[1], float_buffer=True,
-                                            alpha=False)
+                                            alpha=True)
 
                 image.pixels = image_data.pixel_data
                 image.filepath_raw = f"/tmp/vat_cache/{image.name}.exr"
